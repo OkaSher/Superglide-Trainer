@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Legends Superglide Trainer</title>
+  
+  <!-- Open Graph / Meta for GitHub & Social Sharing -->
+  <meta name="description" content="High-precision web trainer for practicing Apex Legends superglides with 1-frame timing validation, custom keybinds, and streak counter.">
+  <meta property="og:title" content="Apex Legends Superglide Trainer">
+  <meta property="og:description" content="Master the 1-frame superglide mechanic in Apex Legends. Works in browser with custom keybinds & audio feedback.">
+  <meta property="og:type" content="website">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <header>
+      <div class="title-group">
+        <h1 id="i18n-title">⚡ Apex Superglide Trainer</h1>
+        <p id="i18n-subtitle">Custom keybind configuration & 1-frame timing validator</p>
+      </div>
+
+      <div class="header-actions">
+        <!-- COMPACT MODE TOGGLE -->
+        <button class="icon-btn" id="btn-toggle-compact" title="Toggle Compact Mini-HUD Mode">
+          <span id="compact-btn-icon">🗖</span>
+          <span id="i18n-compact-btn">Mini-HUD</span>
+        </button>
+
+        <!-- LANGUAGE TOGGLE -->
+        <div class="lang-switch">
+          <button class="lang-btn" id="lang-en" data-lang="en">EN</button>
+          <button class="lang-btn" id="lang-ru" data-lang="ru">RU</button>
+        </div>
+
+        <div class="status-badge hide-in-compact">
+          <div class="status-dot"></div>
+          <span id="i18n-status-ready">Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- AUDIO CONTROLS BAR -->
+    <div class="audio-bar hide-in-compact">
+      <div class="audio-left">
+        <span id="i18n-soundpack-label">🔊 Sound Profile:</span>
+        <select class="sound-select" id="sound-profile-select">
+          <option value="sound1">Sound 1</option>
+          <option value="sound2">Sound 2</option>
+          <option value="sound3">Sound 3</option>
+          <option value="mute">Mute</option>
+        </select>
+      </div>
+      <div class="audio-right">
+        <span id="i18n-volume-label">Volume:</span>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="80">
+        <span id="volume-val-text" style="font-family: monospace; font-weight: 700; width: 34px;">80%</span>
+      </div>
+    </div>
+
+    <!-- SETTINGS & CUSTOM INPUT KEYS PANEL -->
+    <div class="controls-grid hide-in-compact">
+
+      <!-- CUSTOM KEYBINDS PANEL -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2 id="i18n-keybinds-title">Keybind Settings</h2>
+          <button class="btn-reset-binds" id="btn-reset-binds" title="Reset to defaults">
+            Default
+          </button>
+        </div>
+
+        <div class="binds-container">
+          <!-- JUMP BINDS -->
+          <div class="bind-group">
+            <div class="bind-group-label jump-label">
+              <span id="i18n-jump-label">🔼 JUMP:</span>
+            </div>
+            <div class="chips-row" id="jump-chips-row">
+              <!-- Dynamically populated chips -->
+            </div>
+          </div>
+
+          <!-- CROUCH BINDS -->
+          <div class="bind-group">
+            <div class="bind-group-label crouch-label">
+              <span id="i18n-crouch-label">🔽 CROUCH:</span>
+            </div>
+            <div class="chips-row" id="crouch-chips-row">
+              <!-- Dynamically populated chips -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FPS TARGET SELECTOR -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2 id="i18n-fps-title">Frame Rate (Apex FPS)</h2>
+        </div>
+        <div class="fps-selector">
+          <button class="fps-btn" data-fps="60">60</button>
+          <button class="fps-btn" data-fps="120">120</button>
+          <button class="fps-btn active" data-fps="144">144</button>
+          <button class="fps-btn" data-fps="165">165</button>
+          <button class="fps-btn" data-fps="180">180</button>
+          <button class="fps-btn" data-fps="240">240</button>
+          <div class="fps-custom">
+            <input type="number" id="custom-fps-input" placeholder="Custom" min="30" max="500">
+          </div>
+        </div>
+        <div id="i18n-fps-hint" style="margin-top: 14px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          💡 Set this to match your in-game <code>fps_max</code>. Higher FPS means a tighter timing window.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN RESULT HERO DISPLAY -->
+    <div class="hero-card">
+
+      <!-- STREAK BANNER -->
+      <div class="streak-banner" id="streak-banner">
+        <span>⚡</span>
+        <span id="streak-banner-text">Streak: 0</span>
+      </div>
+
+      <div class="verdict-title" id="verdict-text" style="color: var(--text-muted);">
+        Perform a superglide
+      </div>
+      <div class="verdict-sub" id="verdict-detail">
+        Press Jump then Crouch. Window at 144 FPS: 6.94 ms
+      </div>
+
+      <!-- TIMELINE GAUGE -->
+      <div class="timeline-container">
+        <!-- Zone < 0ms (crouch before jump) -->
+        <div class="zone-fail-early" id="gauge-early-label">Crouch First</div>
+        <!-- Zone 0ms to 1 frame -->
+        <div class="zone-target" id="zone-target">1 FRAME</div>
+        <!-- Zone > 1 frame -->
+        <div class="zone-fail-late" id="gauge-late-label">Too late</div>
+
+        <!-- Jump reference marker at 0ms -->
+        <div class="marker-jump"></div>
+
+        <!-- Dynamic Crouch Marker -->
+        <div class="marker-crouch" id="marker-crouch"></div>
+      </div>
+
+      <!-- STATS STRIP -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-attempts">0</div>
+          <div class="stat-label" id="i18n-stat-attempts">Attempts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-success" style="color: var(--success);">0</div>
+          <div class="stat-label" id="i18n-stat-success">Success</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-rate">0%</div>
+          <div class="stat-label" id="i18n-stat-rate">Winrate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-avg">0 ms</div>
+          <div class="stat-label" id="i18n-stat-avg">Avg Delta</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-streak" style="color: var(--warning);">0</div>
+          <div class="stat-label" id="i18n-stat-streak">Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-best" style="color: var(--gold);">0</div>
+          <div class="stat-label" id="i18n-stat-best">Best</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANTLE TIMING SIMULATOR (OPTIONAL PRACTICE) -->
+    <div class="panel hide-in-compact">
+      <div class="mantle-header">
+        <h2 id="i18n-mantle-title">Mantle Peak Simulator</h2>
+        <button class="fps-btn" id="toggle-mantle-btn">Start Simulation (Space to start)</button>
+      </div>
+      <div class="mantle-box" id="mantle-container" style="display: none;">
+        <div style="font-size: 12px; color: var(--text-muted); display:flex; justify-content:space-between;">
+          <span id="i18n-mantle-climbing">Climbing wall...</span>
+          <span id="i18n-mantle-zone" style="color:#ff4757; font-weight:700;">RED ZONE = MANTLE PEAK (HIT SUPERGLIDE!)</span>
+        </div>
+        <div class="mantle-bar-bg">
+          <div class="mantle-target-zone"></div>
+          <div class="mantle-bar-fill" id="mantle-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY LOG -->
+    <div class="history-panel hide-in-compact">
+      <div class="history-header">
+        <h2 id="i18n-history-title">Recent Attempts History</h2>
+        <div class="history-actions">
+          <button class="btn-secondary" id="btn-share-report">📋 Share Stats</button>
+          <button class="btn-secondary clear-btn" id="btn-clear-history">Reset Stats</button>
+        </div>
+      </div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th id="i18n-col-num">#</th>
+            <th id="i18n-col-jump">Jump Key</th>
+            <th id="i18n-col-crouch">Crouch Key</th>
+            <th id="i18n-col-delta">Delta (ms)</th>
+            <th id="i18n-col-frames">Window (frames)</th>
+            <th id="i18n-col-result">Result</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <!-- Rows will be injected dynamically -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer-hints hide-in-compact" id="i18n-footer-hint">
+      💡 <b>Tip:</b> Use <b>Mini-HUD mode</b> while in the Firing Range to keep the trainer visible in a compact window.
+    </div>
+
+  </div>
+
+  <!-- KEY RECORDING MODAL -->
+  <div class="modal-overlay" id="recording-modal">
+    <div class="modal-box" style="border-color: var(--warning);">
+      <div style="font-size: 40px; animation: pulse 1s infinite;">⌨️</div>
+      <h3 id="modal-action-title" style="color: var(--warning);">Waiting for input...</h3>
+      <p id="modal-desc">
+        Press <b>any key</b> on keyboard, scroll <b>mouse wheel</b>, or click a <b>mouse button</b> (LMB, RMB, MMB, Mouse 4/5).
+      </p>
+      <button class="btn-modal-close" id="btn-cancel-record">Cancel (Esc)</button>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast-msg">Copied to clipboard!</div>
+
+  <!-- Scripts loaded in dependency order (Compatible with both file:// and HTTP) -->
+  <script src="js/i18n.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/binds.js"></script>
+  <script src="js/trainer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
